@@ -1,10 +1,10 @@
 """
-The extract module.
+The transform module.
 """
 
 def run():
     """
-    Run extraction.
+    Run transformation.
     """
     pass
 

@@ -15,17 +15,17 @@ git clone git@github.com:anirvanBhaduri/redactor.git
 ## Installing
 Install pip.
 ```bash
-sudo apt-get install python3-pip
+sudo apt-get install python2-pip
 ```
-Then install virtualenv using pip3.
+Then install virtualenv using pip.
 ```bash
-pip3 install virtualenv 
+pip install virtualenv 
 ```
 Create a virtualenv inside the cloned repo.
 ```bash
 cd redactor/
 
-virtualenv .virtualenv
+virtualenv2 .virtualenv
 ```
 Activate the virtualenv.
 ```bash
@@ -60,7 +60,7 @@ python redactor.py
 to run the script.
 
 ## Built With
-* [`python 3.6.1`](https://www.python.org/downloads/release/python-360/)
+* [`python 2.7.13`](https://www.python.org/downloads/release/python-270/)
 
 ## Styling
 * [PEP-8](https://www.python.org/dev/peps/pep-0008/#introduction) 
