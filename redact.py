@@ -9,7 +9,6 @@ import re
 import traceback
 from HTMLParser import HTMLParser
 
-# returns list of phone numbers found in string provided
 def match_phone_numbers(content):
     """
     Given a string input, find all phone numbers in that
