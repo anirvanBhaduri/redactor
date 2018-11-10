@@ -46,7 +46,7 @@ Ensure you are in the root folder of the redactor repo.
 Change the `config.example.py` file to `config.py` and edit
 the config to personalise the script runtime.
 
-Change the `example.store.db` file to the name you specify in the config.py
+Change the `example.store.db` file to the name you specify in the `config.py`
 file for the `sqlite_file`. Then run the migration.
 ```bash
 python migrate.py
