@@ -53,6 +53,12 @@ python migrate.py
 ```
 This will display a verbose output of the tables it creates.
 
+Download a `credentials.json`(or whatever you choose to name it) file
+from [`here`](https://developers.google.com/gmail/api/quickstart/python)
+by completing `Step 1`. Update the `config.py` file and set 
+`google_credentials` to the location of the credentials file relative to
+the root directory of the repo.
+
 Then use
 ```bash
 python redactor.py

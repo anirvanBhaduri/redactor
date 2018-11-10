@@ -51,6 +51,8 @@ class Email(Base):
     email_to = Column(String)
     time = Column(DateTime)
     body = Column(String)
+    external_id = Column(String)
+    thread_id = Column(String)
 
 class RedactedEmail(Base):
     """
@@ -64,3 +66,5 @@ class RedactedEmail(Base):
     email_to = Column(String)
     time = Column(DateTime)
     body = Column(String)
+    external_id = Column(String)
+    thread_id = Column(String)

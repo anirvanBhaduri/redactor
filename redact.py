@@ -1,5 +1,8 @@
 """
 The redact module.
+
+Author: Anirvan Bhaduri
+Since: 10th Nov 2018
 """
 
 import config
@@ -242,6 +245,8 @@ def redact_email(email):
 
     return models.RedactedEmail(
                 id=email.id,
+                thread_id=email.thread_id,
+                external_id=email.external_id,
                 subject=redacted_subject,
                 email_from=redacted_email_from,
                 email_to=redacted_email_to,
@@ -255,8 +260,14 @@ def run():
     session = models.db_session()
 
     try:
+        # only redact emails not already redacted
+        ids = session.query(models.RedactedEmail.id).distinct()
+        emails = session.query(models.Email) \
+                    .filter(~models.Email.id.in_(ids)) \
+                    .all()
+
         # go through each email and redact it
-        for email in session.query(models.Email).all():
+        for email in emails:
             session.add(redact_email(email))
 
         session.commit()

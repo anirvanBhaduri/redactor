@@ -1,5 +1,8 @@
 """
 The transform module.
+
+Author: Anirvan Bhaduri
+Since: 10th Nov 2018
 """
 
 def run():
