@@ -5,3 +5,4 @@ __pycache__
 *.pyc
 credentials/token.json
 credentials/credentials.json
+store.db-journal

@@ -28,3 +28,6 @@ google_credentials = "./credentials/credentials.json"
 # google api scope
 # the extractor only requires read access
 google_scope = 'https://www.googleapis.com/auth/gmail.readonly'
+
+# gmail api query to filter
+gmail_query = ''

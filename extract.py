@@ -8,7 +8,10 @@ Since: 10th Nov 2018
 import config
 import base64
 import email
+import models
 
+from datetime import datetime
+from dateutil.parser import parse
 from googleapiclient import discovery
 from httplib2 import Http
 from oauth2client import client, tools
@@ -47,6 +50,7 @@ class GMailExtractor(object):
     Used to extract emails using the token and 
     credentials configuration.
     """
+    _page_token = None
 
     def __init__(self, service):
         """
@@ -70,18 +74,62 @@ class GMailExtractor(object):
             emails: list - a list of emails
         """
         try:
-            response = self._service.users().messages() \
-                            .list(userId=user_id, q=query).execute()
+            if self.page_token():
+                response = self._service.users().messages() \
+                                .list(userId=user_id, q=query,
+                                        pageToken=self.page_token()).execute()
+            else:
+                response = self._service.users().messages() \
+                                .list(userId=user_id, q=query).execute()
 
             messages = []
             if 'messages' in response:
                 messages.extend(response['messages'])
-                
+
+            self._page_token = response.get('nextPageToken')
             return messages
 
         except errors.HttpError as e:
             print(e) 
             return []
+
+    def page_token(self):
+        """
+        Get the GMail api page token for the next page
+        in the extractor query.
+
+        Returns:
+            page_token: string - a token to gather the next page
+                of the query.
+        """
+        return self._page_token
+
+    def retrieve_from_parts(self, parts):
+        """
+        Get the part which represents the body of the GMail
+        message.
+
+        Args:
+            parts: list - a list of message parts
+
+        Returns:
+            content: the body material
+        """
+        mimes = {
+            "text/plain": "", 
+            "text/html": ""
+        }
+
+        # we only want plain text or html
+        # we don't care about the other parts
+        for part in parts:
+            if mimes.get(part['mimeType'].strip()) is not None:
+                mimes[part['mimeType']] = part['body'].get('data')
+
+        if mimes.get('text/html'):
+            return mimes['text/html']
+
+        return mimes['text/plain']
 
     def generate_email(self, mail_id, thread_id, user_id='me'):
         """
@@ -96,33 +144,102 @@ class GMailExtractor(object):
             Email: an email model
         """
         try:
+            # dict to gather email information
+            meta = {
+                "Subject": True,
+                "From": True,
+                "To": True,
+                "Date": True,
+            }
+
             message = self._service.users().messages() \
                         .get(userId=user_id, 
+                                format='full',
                                 id=mail_id).execute()
 
-            # get the html content of the message
-            for part in message['payload']['parts']:
-                if 'text/html' in part['mimeType']:
-                    body = base64.urlsafe_b64decode(
-                            part['body']['data'].encode('ASCII'))
-                    break
+            # lets check the partId of the actual content
+            mime = message['payload']['mimeType']
 
+            if mime.startswith('multipart'):
+                content = self.retrieve_from_parts(
+                            message['payload']['parts'])
+            else:
+                content = message['payload']['body']['data']
 
-            return message
+            # don't continue to make email if no content
+            if not content:
+                return
+
+            body = base64.urlsafe_b64decode(
+                        content.encode('ASCII'))
+
+            for header in message['payload']['headers']:
+                if meta.get(header['name'], False):
+                    meta[header['name'].lower()] = header['value']
+
+                    del meta[header['name']]
+
+            # gmail provides the internal date as epoch ms
+            date = datetime.fromtimestamp(
+                        float(message['internalDate']) / 1000)
+
+            return models.Email(
+                        external_id=message['id'],
+                        thread_id=message['threadId'],
+                        body=unicode(body, 'utf-8'),
+                        email_to=meta.get('to', ''),
+                        email_from=meta.get('from', ''),
+                        subject=meta.get('subject', ''),
+                        time=date
+                    )
+
         except errors.HttpError as e:
             print(e)
+
+def extract_messages(extractor, messages):
+    """
+    Extract the given messages into the db.
+
+    Args:
+        extractor: object - the extractor to use to extract the messages
+        messages: list - a list of messages to store in the db
+    """
+    session = models.db_session()
+
+    for message in messages:
+        existing = session.query(models.Email) \
+                    .filter(models.Email.external_id==message['id']) \
+                    .all()
+
+        # if we already have this message in the db
+        # we don't need to recreate it
+        if len(existing) > 0:
+            continue
+
+        email = extractor.generate_email(
+                    message['id'], message['threadId'])
+
+        if not email:
+            continue
+
+        session.add(email)
+
+    # commit the records
+    session.commit()
 
 def run():
     """
     Run extraction.
     """
     extractor = GMailExtractor(api_service())
-    messages = extractor.messages()
+    messages = extractor.messages(query=config.gmail_query)
+    print('Extracting first page.')
+    extract_messages(extractor, messages)
 
-    for message in messages:
-        print(extractor.generate_email(
-            message['id'], message['threadId']).keys())
-        break
+    while extractor.page_token():
+        print('Extracting page {}.'.format(extractor.page_token()))
+        messages = extractor.messages(query=config.gmail_query)
+        extract_messages(extractor, messages)
 
 if __name__ == '__main__':
     run()
