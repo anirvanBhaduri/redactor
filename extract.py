@@ -205,15 +205,16 @@ def extract_messages(extractor, messages):
         messages: list - a list of messages to store in the db
     """
     session = models.db_session()
+    ids = [message['id'] for message in messages]
+    existing = session.query(models.Email.external_id) \
+                .filter(models.Email.external_id.in_(ids)) \
+                .all()
+    existing_ids = [item[0] for item in existing] 
 
     for message in messages:
-        existing = session.query(models.Email) \
-                    .filter(models.Email.external_id==message['id']) \
-                    .all()
-
         # if we already have this message in the db
         # we don't need to recreate it
-        if len(existing) > 0:
+        if message['id'] in existing_ids:
             continue
 
         email = extractor.generate_email(
