@@ -189,7 +189,7 @@ def run():
     
         table = create_table(table_header, table_rows)
         commit_table(
-                table, '{}--{}.index.html'.format(base_id, emails[-1].id), 
+                table, '{}--{}.index.html'.format(base_id+1, emails[-1].id), 
                 config.generation_root)
 
         base_id = emails[-1].id
