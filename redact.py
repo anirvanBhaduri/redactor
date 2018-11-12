@@ -272,15 +272,25 @@ def run():
     try:
         # only redact emails not already redacted
         ids = session.query(models.RedactedEmail.id).distinct()
-        emails = session.query(models.Email) \
-                    .filter(~models.Email.id.in_(ids)) \
-                    .all()
+        base_id = 0
 
-        # go through each email and redact it
-        for email in emails:
-            session.add(redact_email(email))
+        while True:
+            emails = session.query(models.Email) \
+                        .filter(~models.Email.id.in_(ids)) \
+                        .order_by(models.Email.id.asc()) \
+                        .filter(models.Email.id>base_id) \
+                        .limit(100) \
+                        .all()
 
-        session.commit()
+            if not len(emails):
+                break
+
+            # go through each email and redact it
+            for email in emails:
+                session.add(redact_email(email))
+
+            base_id = emails[-1].id
+            session.commit()
 
     # rollback if any failures
     except Exception as e:

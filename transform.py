@@ -35,7 +35,7 @@ def create_table(headers, rows):
         raise ValueError('Must provide TableRow.')
 
     h = HTML()
-    table = h.table
+    table = h.table(border='1')
     body = table.tbody
     body.text(headers.html_element(), escape=False)
 
@@ -92,6 +92,7 @@ class TableHeader(TableRow):
         for header, item in self._row:
             row.th.b(header)
 
+        row.th.b('Link')
         return row
 
 class Row(object):
