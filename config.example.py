@@ -31,3 +31,21 @@ google_scope = 'https://www.googleapis.com/auth/gmail.readonly'
 
 # gmail api query to filter
 gmail_query = ''
+
+# store the important emails up to id
+important_ids = 1000
+
+# table column definitions
+# used during transformation
+# dbColumn to Table Header
+table_columns = [
+    ('example', "Example"), 
+]
+
+# FULL path to a folder that is the root for file generation
+# tranform.py will generate files in this folder
+generation_root = ''
+
+# email type to transform
+# email_type = 'Email'
+email_type = 'RedactedEmail'

@@ -30,7 +30,8 @@ def match_phone_numbers(content):
         "\\(?\\d{3}\\)?[.-]? *\\d{3}[.-]? *[.-]?\\d{4}",
         "\\(\\d{3}\\)\\s\\d{3}-\\d{4}",
         "\(\d{2,4}\)\d{6,7}",
-        "\(\d{2,4}\) \d{6,7}"
+        "\(\d{2,4}\) \d{6,7}",
+        r"(^[0][2][1579]{1})(\d{6,7}$)"
     ]
 
     matches = []
@@ -101,8 +102,17 @@ def match_ip_address(content):
     if not isinstance(content, basestring):
         raise ValueError('content must be a string.')
 
-    pattern = "\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b"
-    return re.findall(pattern, content)
+    patterns = [
+        "\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}\b",
+        r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b"
+    ]
+
+    matches = []
+
+    for pattern in patterns:
+        matches.extend(re.findall(pattern, content))
+
+    return matches
 
 def redact_ip_address(content):
     """
