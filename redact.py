@@ -239,10 +239,22 @@ def redact_email(email):
 
     redacted_subject = redact_email_address(subject)
     redacted_subject = redact_ip_address(redacted_subject)
-    redacted_subject = redact_phone_numbers(redacted_subject)
+    # it is unlikely that subjets will have phone numbers
+    # so we are not redacting phone numbers from the subject
 
     redacted_email_from = redact_email_address(email_from)
+
+    # we want the "from" field to be fully redacted if the
+    # email address has been redacted
+    if config.redaction_string in redacted_email_from:
+        redacted_email_from = config.redaction_string
+
     redacted_email_to = redact_email_address(email_to)
+
+    # we want the "to" field to be fully redacted if the
+    # email address has been redacted
+    if config.redaction_string in redacted_email_to:
+        redacted_email_to = config.redaction_string
 
     # we need to parse the html content for the body as well
     parser = EmailHtmlParser()
